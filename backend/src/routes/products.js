@@ -18,6 +18,7 @@ const productSchema = z.object({
   compareAt: z.number().int().nonnegative().optional(),
   category: z.string().min(1),
   university: z.string().optional(),
+  gender: z.enum(['men', 'women', 'unisex']).optional(),
   images: z.array(z.string()).default([]),
   sizes: z.array(z.string()).default([]),
   colors: z.array(colorSchema).default([]),
@@ -89,14 +90,15 @@ router.post('/import-sheet', requireImportKey, upload.single('file'), async (req
   }
 });
 
-// GET /api/products?category=&university=&search=&featured=true&page=1&limit=20
+// GET /api/products?category=&university=&gender=&search=&featured=true&page=1&limit=20
 router.get('/', async (req, res, next) => {
   try {
-    const { category, university, search, featured, page = 1, limit = 20 } = req.query;
+    const { category, university, gender, search, featured, page = 1, limit = 20 } = req.query;
 
     const where = {
       ...(category ? { category: String(category) } : {}),
       ...(university ? { university: String(university) } : {}),
+      ...(gender ? { gender: String(gender) } : {}),
       ...(featured ? { featured: featured === 'true' } : {}),
       ...(search
         ? {

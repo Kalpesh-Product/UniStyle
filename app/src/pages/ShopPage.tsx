@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { X, Filter, Grid3X3, LayoutGrid, LayoutList, ChevronDown } from 'lucide-react';
-import { categories, type Product } from '@/data/products';
+import { X, Filter, Grid3X3, LayoutGrid, LayoutList, ChevronDown, SlidersHorizontal, ChevronRight } from 'lucide-react';
+import type { Product } from '@/data/products';
 import { useProducts } from '@/hooks/useProducts';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
@@ -16,6 +16,8 @@ const sortOptions = [
   { label: 'Price, low to high', value: 'price-asc' },
   { label: 'Price, high to low', value: 'price-desc' },
 ];
+
+const ACCESSORY_CATEGORIES = ['Badges', 'Bagpack', 'Beanies', 'Bottles', 'Caps', 'Crests', 'Mugs', 'Scarfs', 'Tote Bags'];
 
 const colors = [
   { name: 'Black', hex: '#1A1A1A' },
@@ -128,6 +130,7 @@ export function ShopPage() {
   const { products, loading } = useProducts();
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>(initialCategory ? [initialCategory] : []);
+  const [selectedGenders, setSelectedGenders] = useState<string[]>([]);
   const [selectedUniversities, setSelectedUniversities] = useState<string[]>([]);
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
@@ -137,14 +140,48 @@ export function ShopPage() {
   const [gridCols, setGridCols] = useState(4);
   const [sortOpen, setSortOpen] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [filtersCollapsed, setFiltersCollapsed] = useState(false);
+  const [accessoriesOpen, setAccessoriesOpen] = useState(
+    () => !!initialCategory && ACCESSORY_CATEGORIES.includes(initialCategory)
+  );
 
   const universities = useMemo(
     () => Array.from(new Set(products.map(p => p.university).filter((u): u is string => !!u))).sort(),
     [products]
   );
 
+  const categories = useMemo(
+    () => Array.from(new Set(products.map(p => p.category).filter(Boolean))).sort(),
+    [products]
+  );
+
+  const accessorySubcategories = useMemo(
+    () => categories.filter(c => ACCESSORY_CATEGORIES.includes(c)),
+    [categories]
+  );
+
+  const otherCategories = useMemo(
+    () => categories.filter(c => !ACCESSORY_CATEGORIES.includes(c)),
+    [categories]
+  );
+
+  const sizeOrder = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+  const allSizes = useMemo(() => {
+    const found = new Set<string>();
+    products.forEach(p => p.sizes?.forEach(s => found.add(s)));
+    return Array.from(found).sort((a, b) => {
+      const ai = sizeOrder.indexOf(a);
+      const bi = sizeOrder.indexOf(b);
+      if (ai === -1 && bi === -1) return a.localeCompare(b);
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
+  }, [products]);
+
   const filteredProducts = useMemo(() => {
     let result = [...products];
+    if (selectedGenders.length) result = result.filter(p => !!p.gender && selectedGenders.includes(p.gender));
     if (selectedCategories.length) result = result.filter(p => selectedCategories.includes(p.category));
     if (selectedUniversities.length) result = result.filter(p => !!p.university && selectedUniversities.includes(p.university));
     if (selectedColors.length) result = result.filter(p => p.colors?.some(c => selectedColors.includes(c.name)));
@@ -164,9 +201,10 @@ export function ShopPage() {
       default: break;
     }
     return result;
-  }, [products, selectedCategories, selectedUniversities, selectedColors, selectedSizes, selectedAvailability, priceRange, sort]);
+  }, [products, selectedGenders, selectedCategories, selectedUniversities, selectedColors, selectedSizes, selectedAvailability, priceRange, sort]);
 
   const clearFilters = () => {
+    setSelectedGenders([]);
     setSelectedCategories([]);
     setSelectedUniversities([]);
     setSelectedColors([]);
@@ -176,12 +214,20 @@ export function ShopPage() {
     setSearchParams({});
   };
 
+  const toggleGender = (gender: string) => {
+    setSelectedGenders(prev => prev.includes(gender) ? prev.filter(g => g !== gender) : [...prev, gender]);
+  };
+
   const toggleCategory = (cat: string) => {
     setSelectedCategories(prev => prev.includes(cat) ? prev.filter(c => c !== cat) : [...prev, cat]);
   };
 
   const toggleUniversity = (uni: string) => {
     setSelectedUniversities(prev => prev.includes(uni) ? prev.filter(u => u !== uni) : [...prev, uni]);
+  };
+
+  const toggleSize = (size: string) => {
+    setSelectedSizes(prev => prev.includes(size) ? prev.filter(s => s !== size) : [...prev, size]);
   };
 
   useEffect(() => {
@@ -195,7 +241,7 @@ export function ShopPage() {
   return (
     <div className="mt-[72px]">
       {/* Banner */}
-      <div className="relative bg-[#1A1A1A] h-[300px] md:h-[400px] flex flex-col items-center justify-center text-white">
+      {/* <div className="relative bg-[#1A1A1A] h-[300px] md:h-[400px] flex flex-col items-center justify-center text-white">
         <div className="absolute inset-0 opacity-30">
           <img src="/hero-1.jpg" alt="" className="w-full h-full object-cover" />
         </div>
@@ -203,7 +249,7 @@ export function ShopPage() {
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight">PRODUCTS</h1>
           <p className="text-sm text-white/70 mt-3">Home / Products</p>
         </div>
-      </div>
+      </div> */}
 
       <div ref={sectionRef} className="max-w-[1440px] mx-auto px-6 lg:px-12 py-12">
         <div className="flex gap-8">
@@ -213,90 +259,185 @@ export function ShopPage() {
               <h3 className="font-semibold">Filters</h3>
               <button onClick={() => setSidebarOpen(false)}><X size={20} /></button>
             </div>
-            <button onClick={clearFilters} className="text-xs font-medium underline text-[#666] hover:text-[#1A1A1A] mb-6">Reset</button>
+            <button
+              onClick={() => setFiltersCollapsed(prev => !prev)}
+              className="flex items-center justify-between w-full text-sm font-medium text-[#1A1A1A] mb-6"
+            >
+              <span className="flex items-center gap-2">
+                <SlidersHorizontal size={16} />
+                {filtersCollapsed ? 'Show Filters' : 'Hide Filters'}
+              </span>
+              <ChevronRight size={16} className={`transition-transform ${filtersCollapsed ? '' : 'rotate-90'}`} />
+            </button>
 
-            {/* Universities */}
-            {universities.length > 0 && (
-              <div className="mb-6">
-                <h4 className="text-sm font-semibold uppercase tracking-wider mb-3">Universities</h4>
-                <div className="space-y-2">
-                  {universities.map(uni => {
-                    const count = products.filter(p => p.university === uni).length;
-                    return (
-                      <label key={uni} className="flex items-center gap-2 text-sm text-[#666] cursor-pointer hover:text-[#1A1A1A]">
-                        <input type="checkbox" checked={selectedUniversities.includes(uni)} onChange={() => toggleUniversity(uni)} className="accent-[#1A1A1A]" />
-                        {uni} ({count})
-                      </label>
-                    );
-                  })}
+            {!filtersCollapsed && (
+              <>
+                {/* <button onClick={clearFilters} className="text-xs font-medium underline text-[#666] hover:text-[#1A1A1A] mb-6">Reset</button> */}
+
+                {/* Gender */}
+                <div className="mb-6">
+                  <h4 className="text-sm font-semibold uppercase tracking-wider mb-3">Gender</h4>
+                  <div className="space-y-2">
+                    {['men', 'women'].map(gender => {
+                      const count = products.filter(p => p.gender === gender).length;
+                      return (
+                        <label key={gender} className="flex items-center gap-2 text-sm text-[#666] cursor-pointer hover:text-[#1A1A1A]">
+                          <input type="checkbox" checked={selectedGenders.includes(gender)} onChange={() => toggleGender(gender)} className="accent-[#1A1A1A]" />
+                          {gender === 'men' ? 'Men' : 'Women'} ({count})
+                        </label>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            )}
 
-            {/* Categories */}
-            <div className="mb-6">
-              <h4 className="text-sm font-semibold uppercase tracking-wider mb-3">Categories</h4>
-              <div className="space-y-2">
-                {categories.map(cat => {
-                  const count = products.filter(p => p.category === cat).length;
-                  return (
-                    <label key={cat} className="flex items-center gap-2 text-sm text-[#666] cursor-pointer hover:text-[#1A1A1A]">
-                      <input type="checkbox" checked={selectedCategories.includes(cat)} onChange={() => toggleCategory(cat)} className="accent-[#1A1A1A]" />
-                      {cat} ({count})
+                {/* Universities */}
+                {universities.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-sm font-semibold uppercase tracking-wider mb-3">Universities</h4>
+                    <div className="space-y-2">
+                      {universities.map(uni => {
+                        const count = products.filter(p => p.university === uni).length;
+                        return (
+                          <label key={uni} className="flex items-center gap-2 text-sm text-[#666] cursor-pointer hover:text-[#1A1A1A]">
+                            <input type="checkbox" checked={selectedUniversities.includes(uni)} onChange={() => toggleUniversity(uni)} className="accent-[#1A1A1A]" />
+                            {uni} ({count})
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Categories */}
+                <div className="mb-6">
+                  <h4 className="text-sm font-semibold uppercase tracking-wider mb-3">Categories</h4>
+                  <div className="space-y-2">
+                    {accessorySubcategories.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between w-full text-sm text-[#666]">
+                          <label className="flex items-center gap-2 cursor-pointer hover:text-[#1A1A1A]">
+                            <input
+                              type="checkbox"
+                              ref={el => {
+                                if (el) {
+                                  const selectedCount = accessorySubcategories.filter(c => selectedCategories.includes(c)).length;
+                                  el.indeterminate = selectedCount > 0 && selectedCount < accessorySubcategories.length;
+                                }
+                              }}
+                              checked={accessorySubcategories.every(c => selectedCategories.includes(c))}
+                              onChange={() => {
+                                const allSelected = accessorySubcategories.every(c => selectedCategories.includes(c));
+                                setSelectedCategories(prev => allSelected
+                                  ? prev.filter(c => !accessorySubcategories.includes(c))
+                                  : Array.from(new Set([...prev, ...accessorySubcategories])));
+                              }}
+                              className="accent-[#1A1A1A]"
+                            />
+                            Accessories ({products.filter(p => ACCESSORY_CATEGORIES.includes(p.category)).length})
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => setAccessoriesOpen(prev => !prev)}
+                            aria-label="Toggle accessories subcategories"
+                          >
+                            <ChevronRight size={14} className={`transition-transform ${accessoriesOpen ? 'rotate-90' : ''}`} />
+                          </button>
+                        </div>
+                        {accessoriesOpen && (
+                          <div className="mt-2 ml-4 space-y-2">
+                            {accessorySubcategories.map(cat => {
+                              const count = products.filter(p => p.category === cat).length;
+                              return (
+                                <label key={cat} className="flex items-center gap-2 text-sm text-[#666] cursor-pointer hover:text-[#1A1A1A]">
+                                  <input type="checkbox" checked={selectedCategories.includes(cat)} onChange={() => toggleCategory(cat)} className="accent-[#1A1A1A]" />
+                                  {cat} ({count})
+                                </label>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    {otherCategories.map(cat => {
+                      const count = products.filter(p => p.category === cat).length;
+                      return (
+                        <label key={cat} className="flex items-center gap-2 text-sm text-[#666] cursor-pointer hover:text-[#1A1A1A]">
+                          <input type="checkbox" checked={selectedCategories.includes(cat)} onChange={() => toggleCategory(cat)} className="accent-[#1A1A1A]" />
+                          {cat} ({count})
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Size */}
+                {allSizes.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="text-sm font-semibold uppercase tracking-wider mb-3">Size</h4>
+                    <div className="space-y-2">
+                      {allSizes.map(size => {
+                        const count = products.filter(p => p.sizes?.includes(size)).length;
+                        return (
+                          <label key={size} className="flex items-center gap-2 text-sm text-[#666] cursor-pointer hover:text-[#1A1A1A]">
+                            <input type="checkbox" checked={selectedSizes.includes(size)} onChange={() => toggleSize(size)} className="accent-[#1A1A1A]" />
+                            {size} ({count})
+                          </label>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* Availability */}
+                <div className="mb-6">
+                  <h4 className="text-sm font-semibold uppercase tracking-wider mb-3">Availability</h4>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-sm text-[#666] cursor-pointer">
+                      <input type="checkbox" checked={selectedAvailability.includes('in')} onChange={() => setSelectedAvailability(prev => prev.includes('in') ? prev.filter(x => x !== 'in') : [...prev, 'in'])} className="accent-[#1A1A1A]" />
+                      In stock ({products.filter(p => p.inStock).length})
                     </label>
-                  );
-                })}
-              </div>
-            </div>
+                    <label className="flex items-center gap-2 text-sm text-[#666] cursor-pointer">
+                      <input type="checkbox" checked={selectedAvailability.includes('out')} onChange={() => setSelectedAvailability(prev => prev.includes('out') ? prev.filter(x => x !== 'out') : [...prev, 'out'])} className="accent-[#1A1A1A]" />
+                      Out of stock ({products.filter(p => !p.inStock).length})
+                    </label>
+                  </div>
+                </div>
 
-            {/* Availability */}
-            <div className="mb-6">
-              <h4 className="text-sm font-semibold uppercase tracking-wider mb-3">Availability</h4>
-              <div className="space-y-2">
-                <label className="flex items-center gap-2 text-sm text-[#666] cursor-pointer">
-                  <input type="checkbox" checked={selectedAvailability.includes('in')} onChange={() => setSelectedAvailability(prev => prev.includes('in') ? prev.filter(x => x !== 'in') : [...prev, 'in'])} className="accent-[#1A1A1A]" />
-                  In stock ({products.filter(p => p.inStock).length})
-                </label>
-                <label className="flex items-center gap-2 text-sm text-[#666] cursor-pointer">
-                  <input type="checkbox" checked={selectedAvailability.includes('out')} onChange={() => setSelectedAvailability(prev => prev.includes('out') ? prev.filter(x => x !== 'out') : [...prev, 'out'])} className="accent-[#1A1A1A]" />
-                  Out of stock ({products.filter(p => !p.inStock).length})
-                </label>
-              </div>
-            </div>
-
-            {/* Price */}
-            <div className="mb-6">
-              <h4 className="text-sm font-semibold uppercase tracking-wider mb-3">Price</h4>
-              <div className="flex items-center gap-3 mb-3">
-                <span className="text-xs text-[#666]">${priceRange[0]}</span>
-                <span className="text-xs text-[#666]">-</span>
-                <span className="text-xs text-[#666]">${priceRange[1]}</span>
-              </div>
-              <input
-                type="range"
-                min={0}
-                max={2000}
-                value={priceRange[1]}
-                onChange={e => setPriceRange([0, parseInt(e.target.value)])}
-                className="w-full accent-[#1A1A1A]"
-              />
-            </div>
-
-            {/* Colors */}
-            <div className="mb-6">
-              <h4 className="text-sm font-semibold uppercase tracking-wider mb-3">Color</h4>
-              <div className="flex flex-wrap gap-2">
-                {colors.map(c => (
-                  <button
-                    key={c.name}
-                    onClick={() => setSelectedColors(prev => prev.includes(c.name) ? prev.filter(x => x !== c.name) : [...prev, c.name])}
-                    className={`w-6 h-6 rounded-full border-2 transition-all ${selectedColors.includes(c.name) ? 'border-[#1A1A1A] scale-110' : 'border-[#E5E5E5]'}`}
-                    style={{ backgroundColor: c.hex }}
-                    title={c.name}
+                {/* Price */}
+                <div className="mb-6">
+                  <h4 className="text-sm font-semibold uppercase tracking-wider mb-3">Price</h4>
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="text-xs text-[#666]">${priceRange[0]}</span>
+                    <span className="text-xs text-[#666]">-</span>
+                    <span className="text-xs text-[#666]">${priceRange[1]}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={0}
+                    max={2000}
+                    value={priceRange[1]}
+                    onChange={e => setPriceRange([0, parseInt(e.target.value)])}
+                    className="w-full accent-[#1A1A1A]"
                   />
-                ))}
-              </div>
-            </div>
+                </div>
+
+                {/* Colors */}
+                <div className="mb-6">
+                  <h4 className="text-sm font-semibold uppercase tracking-wider mb-3">Color</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {colors.map(c => (
+                      <button
+                        key={c.name}
+                        onClick={() => setSelectedColors(prev => prev.includes(c.name) ? prev.filter(x => x !== c.name) : [...prev, c.name])}
+                        className={`w-6 h-6 rounded-full border-2 transition-all ${selectedColors.includes(c.name) ? 'border-[#1A1A1A] scale-110' : 'border-[#E5E5E5]'}`}
+                        style={{ backgroundColor: c.hex }}
+                        title={c.name}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </aside>
 
           {/* Main */}

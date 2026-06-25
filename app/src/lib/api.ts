@@ -85,17 +85,29 @@ export const api = {
 
   getMe: () => request<{ user: BackendUser }>('/auth/me'),
 
-  patchMe: (data: { firstName?: string; lastName?: string; email?: string }) =>
+  patchMe: (data: {
+    firstName?: string; lastName?: string; email?: string; phone?: string;
+    dateOfBirth?: string; gender?: string; nationality?: string;
+    preferences?: Partial<BackendUserPreferences>;
+  }) =>
     request<{ user: BackendUser }>('/auth/me', { method: 'PATCH', body: JSON.stringify(data) }),
 
   addAddress: (data: BackendAddressInput) =>
     request<{ user: BackendUser }>('/auth/me/addresses', { method: 'POST', body: JSON.stringify(data) }),
 
+  updateAddress: (addressId: string, data: Partial<BackendAddressInput>) =>
+    request<{ user: BackendUser }>(`/auth/me/addresses/${addressId}`, { method: 'PATCH', body: JSON.stringify(data) }),
+
   removeAddress: (addressId: string) =>
     request<{ user: BackendUser }>(`/auth/me/addresses/${addressId}`, { method: 'DELETE' }),
 
+  changePassword: (data: { currentPassword: string; newPassword: string }) =>
+    request<void>('/auth/me/change-password', { method: 'POST', body: JSON.stringify(data) }),
+
+  deleteAccount: () => request<void>('/auth/me', { method: 'DELETE' }),
+
   // ---- Products ----
-  getProducts: (params: { category?: string; search?: string; featured?: boolean; page?: number; limit?: number } = {}) => {
+  getProducts: (params: { category?: string; university?: string; gender?: string; search?: string; featured?: boolean; page?: number; limit?: number } = {}) => {
     const qs = new URLSearchParams();
     Object.entries(params).forEach(([k, v]) => { if (v !== undefined) qs.set(k, String(v)); });
     return request<{ products: BackendProduct[]; total: number; page: number; limit: number }>(`/products?${qs}`);
@@ -133,6 +145,15 @@ export const api = {
 
   getOrders: () => request<{ orders: BackendOrder[] }>('/orders'),
 
+  // ---- Reviews ----
+  getMyReviews: () => request<{ reviews: BackendReview[]; awaiting: BackendAwaitingReview[] }>('/reviews/me'),
+
+  createReview: (data: { productId: string; orderId: string; rating: number; comment: string }) =>
+    request<{ review: BackendReview }>('/reviews', { method: 'POST', body: JSON.stringify(data) }),
+
+  updateReview: (id: string, data: { rating?: number; comment?: string }) =>
+    request<{ review: BackendReview }>(`/reviews/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+
   // ---- Admin ----
   adminLogin: (data: { username: string; password: string }) =>
     adminRequest<{ token: string }>('/admin/login', { method: 'POST', body: JSON.stringify(data) }),
@@ -157,6 +178,7 @@ export const api = {
 
 // ---- Backend response shapes ----
 export interface BackendAddressInput {
+  label?: string;
   fullName: string;
   line1: string;
   line2?: string;
@@ -172,12 +194,25 @@ export interface BackendAddress extends BackendAddressInput {
   _id: string;
 }
 
+export interface BackendUserPreferences {
+  emailNotifications: boolean;
+  smsNotifications: boolean;
+  language: string;
+  currency: string;
+}
+
 export interface BackendUser {
   _id: string;
   email: string;
   firstName?: string;
   lastName?: string;
+  phone?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  nationality?: string;
+  preferences?: BackendUserPreferences;
   addresses: BackendAddress[];
+  createdAt?: string;
 }
 
 export interface BackendProduct {
@@ -189,6 +224,7 @@ export interface BackendProduct {
   compareAt?: number; // cents
   category: string;
   university?: string;
+  gender?: 'men' | 'women' | 'unisex';
   images: string[];
   sizes: string[];
   colors: { name: string; hex: string }[];
@@ -228,6 +264,23 @@ export interface BackendOrder {
   shippingAddress: BackendAddressInput;
   items: BackendOrderItem[];
   createdAt: string;
+  updatedAt: string;
+}
+
+export interface BackendReview {
+  _id: string;
+  userId: string;
+  productId: BackendProduct;
+  orderId: string;
+  rating: number;
+  comment: string;
+  createdAt: string;
+}
+
+export interface BackendAwaitingReview {
+  orderId: string;
+  deliveredAt: string;
+  product: BackendProduct;
 }
 
 export interface AdminProductInput {
@@ -237,6 +290,7 @@ export interface AdminProductInput {
   compareAt?: number; // cents
   category: string;
   university?: string;
+  gender?: 'men' | 'women' | 'unisex';
   images: string[];
   sizes: string[];
   colors: { name: string; hex: string }[];

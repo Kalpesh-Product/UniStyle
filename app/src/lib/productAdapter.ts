@@ -12,6 +12,7 @@ export function adaptProduct(p: BackendProduct): Product {
     images: p.images,
     category: p.category,
     university: p.university,
+    gender: p.gender,
     colors: p.colors,
     sizes: p.sizes.length ? p.sizes : undefined,
     inStock: p.stock > 0,

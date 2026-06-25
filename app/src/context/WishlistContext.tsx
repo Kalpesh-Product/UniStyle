@@ -9,6 +9,7 @@ interface WishlistContextType {
   addToWishlist: (product: Product) => void;
   removeFromWishlist: (productId: string) => void;
   isInWishlist: (productId: string) => boolean;
+  clearWishlist: () => void;
   totalItems: number;
 }
 
@@ -94,10 +95,19 @@ export function WishlistProvider({ children }: { children: React.ReactNode }) {
     [items]
   );
 
+  const clearWishlist = useCallback(() => {
+    if (isAuthenticated) {
+      Promise.all(items.map(p => api.removeFromWishlist(p.id))).then(refreshServerWishlist);
+      return;
+    }
+    setItems([]);
+    localStorage.removeItem(GUEST_WISHLIST_KEY);
+  }, [isAuthenticated, items, refreshServerWishlist]);
+
   const totalItems = useMemo(() => items.length, [items]);
 
   return (
-    <WishlistContext.Provider value={{ items, addToWishlist, removeFromWishlist, isInWishlist, totalItems }}>
+    <WishlistContext.Provider value={{ items, addToWishlist, removeFromWishlist, isInWishlist, clearWishlist, totalItems }}>
       {children}
     </WishlistContext.Provider>
   );

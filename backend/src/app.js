@@ -11,6 +11,7 @@ import cartRoutes from './routes/cart.js';
 import wishlistRoutes from './routes/wishlist.js';
 import checkoutRoutes from './routes/checkout.js';
 import ordersRoutes from './routes/orders.js';
+import reviewsRoutes from './routes/reviews.js';
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 
 const app = express();
@@ -41,6 +42,7 @@ app.use('/api/cart', cartRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/checkout', checkoutRoutes);
 app.use('/api/orders', ordersRoutes);
+app.use('/api/reviews', reviewsRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

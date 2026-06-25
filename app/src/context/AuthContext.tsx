@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { api, getToken, setToken, ApiError, type BackendUser, type BackendOrder, type BackendAddressInput } from '@/lib/api';
+import { api, getToken, setToken, ApiError, type BackendUser, type BackendOrder, type BackendAddressInput, type BackendUserPreferences } from '@/lib/api';
 
 export interface Address {
   id: string;
+  label: string;
   firstName: string;
   lastName: string;
   address1: string;
@@ -17,7 +18,8 @@ export interface Address {
 export interface Order {
   id: string;
   date: string;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered';
+  deliveredAt?: string;
+  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
   items: { productId: string; name: string; image: string; price: number; quantity: number }[];
   total: number;
   shippingAddress: Address;
@@ -29,7 +31,13 @@ export interface User {
   lastName: string;
   email: string;
   avatar?: string;
+  phone?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  nationality?: string;
+  preferences?: BackendUserPreferences;
   addresses: Address[];
+  createdAt?: string;
 }
 
 interface AuthContextType {
@@ -38,9 +46,12 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   register: (data: { firstName: string; lastName: string; email: string; password: string }) => Promise<boolean>;
   logout: () => void;
-  updateProfile: (data: Partial<User>) => Promise<void>;
+  updateProfile: (data: Partial<Omit<User, 'preferences'>> & { preferences?: Partial<BackendUserPreferences> }) => Promise<void>;
   addAddress: (address: Omit<Address, 'id'>) => Promise<void>;
+  updateAddress: (addressId: string, address: Partial<Omit<Address, 'id'>>) => Promise<void>;
   removeAddress: (addressId: string) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  deleteAccount: () => Promise<void>;
   orders: Order[];
   refreshOrders: () => Promise<void>;
 }
@@ -56,6 +67,7 @@ function addressFromBackend(addr: BackendAddressInput & { _id: string }): Addres
   const { firstName, lastName } = splitFullName(addr.fullName);
   return {
     id: addr._id,
+    label: addr.label || 'Home',
     firstName,
     lastName,
     address1: addr.line1,
@@ -70,6 +82,7 @@ function addressFromBackend(addr: BackendAddressInput & { _id: string }): Addres
 
 function addressToBackend(addr: Omit<Address, 'id'>): BackendAddressInput {
   return {
+    label: addr.label,
     fullName: `${addr.firstName} ${addr.lastName}`.trim(),
     line1: addr.address1,
     line2: addr.address2,
@@ -81,13 +94,35 @@ function addressToBackend(addr: Omit<Address, 'id'>): BackendAddressInput {
   };
 }
 
+function addressPatchToBackend(addr: Partial<Omit<Address, 'id'>>): Partial<BackendAddressInput> {
+  const patch: Partial<BackendAddressInput> = {};
+  if (addr.label !== undefined) patch.label = addr.label;
+  if (addr.firstName !== undefined || addr.lastName !== undefined) {
+    patch.fullName = `${addr.firstName ?? ''} ${addr.lastName ?? ''}`.trim();
+  }
+  if (addr.address1 !== undefined) patch.line1 = addr.address1;
+  if (addr.address2 !== undefined) patch.line2 = addr.address2;
+  if (addr.city !== undefined) patch.city = addr.city;
+  if (addr.postalCode !== undefined) patch.postalCode = addr.postalCode;
+  if (addr.country !== undefined) patch.country = addr.country;
+  if (addr.phone !== undefined) patch.phone = addr.phone;
+  if (addr.isDefault !== undefined) patch.isDefault = addr.isDefault;
+  return patch;
+}
+
 function userFromBackend(u: BackendUser): User {
   return {
     id: u._id,
     firstName: u.firstName || '',
     lastName: u.lastName || '',
     email: u.email,
+    phone: u.phone,
+    dateOfBirth: u.dateOfBirth,
+    gender: u.gender,
+    nationality: u.nationality,
+    preferences: u.preferences,
     addresses: u.addresses.map(addressFromBackend),
+    createdAt: u.createdAt,
   };
 }
 
@@ -96,8 +131,8 @@ const STATUS_MAP: Record<BackendOrder['status'], Order['status']> = {
   PAID: 'processing',
   SHIPPED: 'shipped',
   DELIVERED: 'delivered',
-  CANCELLED: 'pending',
-  REFUNDED: 'pending',
+  CANCELLED: 'cancelled',
+  REFUNDED: 'refunded',
 };
 
 function orderFromBackend(o: BackendOrder): Order {
@@ -105,6 +140,7 @@ function orderFromBackend(o: BackendOrder): Order {
   return {
     id: o._id,
     date: new Date(o.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }),
+    deliveredAt: o.status === 'DELIVERED' ? o.updatedAt : undefined,
     status: STATUS_MAP[o.status],
     items: o.items.map(item => ({
       productId: item.productId._id,
@@ -116,6 +152,7 @@ function orderFromBackend(o: BackendOrder): Order {
     total: o.total / 100,
     shippingAddress: {
       id: '',
+      label: 'Home',
       firstName,
       lastName,
       address1: o.shippingAddress.line1,
@@ -183,11 +220,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setOrders([]);
   }, []);
 
-  const updateProfile = useCallback(async (data: Partial<User>) => {
+  const updateProfile = useCallback(async (data: Partial<Omit<User, 'preferences'>> & { preferences?: Partial<BackendUserPreferences> }) => {
     const { user: backendUser } = await api.patchMe({
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,
+      phone: data.phone,
+      dateOfBirth: data.dateOfBirth,
+      gender: data.gender,
+      nationality: data.nationality,
+      preferences: data.preferences,
     });
     setUser(userFromBackend(backendUser));
   }, []);
@@ -197,9 +239,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(userFromBackend(backendUser));
   }, []);
 
+  const updateAddress = useCallback(async (addressId: string, address: Partial<Omit<Address, 'id'>>) => {
+    const { user: backendUser } = await api.updateAddress(addressId, addressPatchToBackend(address));
+    setUser(userFromBackend(backendUser));
+  }, []);
+
   const removeAddress = useCallback(async (addressId: string) => {
     const { user: backendUser } = await api.removeAddress(addressId);
     setUser(userFromBackend(backendUser));
+  }, []);
+
+  const changePassword = useCallback(async (currentPassword: string, newPassword: string) => {
+    await api.changePassword({ currentPassword, newPassword });
+  }, []);
+
+  const deleteAccount = useCallback(async () => {
+    await api.deleteAccount();
+    setToken(null);
+    setUser(null);
+    setOrders([]);
   }, []);
 
   return (
@@ -212,7 +270,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         logout,
         updateProfile,
         addAddress,
+        updateAddress,
         removeAddress,
+        changePassword,
+        deleteAccount,
         orders,
         refreshOrders,
       }}

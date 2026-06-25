@@ -3,6 +3,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { z } from 'zod';
 import User from '../models/User.js';
+import CartItem from '../models/CartItem.js';
+import WishlistItem from '../models/WishlistItem.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = Router();
@@ -23,9 +25,25 @@ const updateMeSchema = z.object({
   firstName: z.string().min(1).optional(),
   lastName: z.string().min(1).optional(),
   email: z.string().email().optional(),
+  phone: z.string().optional(),
+  dateOfBirth: z.coerce.date().optional(),
+  gender: z.string().optional(),
+  nationality: z.string().optional(),
+  preferences: z.object({
+    emailNotifications: z.boolean().optional(),
+    smsNotifications: z.boolean().optional(),
+    language: z.string().optional(),
+    currency: z.string().optional(),
+  }).partial().optional(),
+});
+
+const changePasswordSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: z.string().min(8, 'Password must be at least 8 characters'),
 });
 
 const addressSchema = z.object({
+  label: z.string().optional(),
   fullName: z.string().min(1),
   line1: z.string().min(1),
   line2: z.string().optional(),
@@ -109,10 +127,46 @@ router.get('/me', requireAuth, async (req, res, next) => {
 // PATCH /api/auth/me
 router.patch('/me', requireAuth, async (req, res, next) => {
   try {
-    const data = updateMeSchema.parse(req.body);
-    const user = await User.findByIdAndUpdate(req.user.id, data, { new: true });
+    const { preferences, ...data } = updateMeSchema.parse(req.body);
+    const user = await User.findById(req.user.id);
     if (!user) return res.status(404).json({ error: 'User not found' });
+
+    Object.assign(user, data);
+    if (preferences) Object.assign(user.preferences, preferences);
+    await user.save();
     res.json({ user: publicUser(user) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// POST /api/auth/me/change-password
+router.post('/me/change-password', requireAuth, async (req, res, next) => {
+  try {
+    const data = changePasswordSchema.parse(req.body);
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const valid = await bcrypt.compare(data.currentPassword, user.passwordHash);
+    if (!valid) return res.status(401).json({ error: 'Current password is incorrect' });
+
+    user.passwordHash = await bcrypt.hash(data.newPassword, 10);
+    await user.save();
+    res.status(204).end();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// DELETE /api/auth/me
+router.delete('/me', requireAuth, async (req, res, next) => {
+  try {
+    await Promise.all([
+      CartItem.deleteMany({ userId: req.user.id }),
+      WishlistItem.deleteMany({ userId: req.user.id }),
+      User.findByIdAndDelete(req.user.id),
+    ]);
+    res.status(204).end();
   } catch (err) {
     next(err);
   }
@@ -128,6 +182,27 @@ router.post('/me/addresses', requireAuth, async (req, res, next) => {
     user.addresses.push(data);
     await user.save();
     res.status(201).json({ user: publicUser(user) });
+  } catch (err) {
+    next(err);
+  }
+});
+
+// PATCH /api/auth/me/addresses/:addressId
+router.patch('/me/addresses/:addressId', requireAuth, async (req, res, next) => {
+  try {
+    const data = addressSchema.partial().parse(req.body);
+    const user = await User.findById(req.user.id);
+    if (!user) return res.status(404).json({ error: 'User not found' });
+
+    const address = user.addresses.find(a => a._id.toString() === req.params.addressId);
+    if (!address) return res.status(404).json({ error: 'Address not found' });
+
+    if (data.isDefault) {
+      user.addresses.forEach(a => { a.isDefault = false; });
+    }
+    Object.assign(address, data);
+    await user.save();
+    res.json({ user: publicUser(user) });
   } catch (err) {
     next(err);
   }

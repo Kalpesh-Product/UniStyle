@@ -44,6 +44,7 @@ export function AdminProductForm({ initial, onSubmit, onCancel }: Props) {
   const [price, setPrice] = useState(initial ? (initial.price / 100).toString() : '');
   const [compareAt, setCompareAt] = useState(initial?.compareAt ? (initial.compareAt / 100).toString() : '');
   const [category, setCategory] = useState(initial?.category ?? categories[0]);
+  const [gender, setGender] = useState<'men' | 'women' | 'unisex'>(initial?.gender ?? 'unisex');
   const [university, setUniversity] = useState(initial?.university ?? '');
   const [images, setImages] = useState(toCommaList(initial?.images ?? []));
   const [sizes, setSizes] = useState(toCommaList(initial?.sizes ?? []));
@@ -65,6 +66,7 @@ export function AdminProductForm({ initial, onSubmit, onCancel }: Props) {
         price: Math.round(Number(price) * 100),
         compareAt: compareAt ? Math.round(Number(compareAt) * 100) : undefined,
         category,
+        gender,
         university: university || undefined,
         images: fromCommaList(images),
         sizes: fromCommaList(sizes),
@@ -117,6 +119,18 @@ export function AdminProductForm({ initial, onSubmit, onCancel }: Props) {
           <Label htmlFor="stock">Stock</Label>
           <Input id="stock" type="number" min="0" value={stock} onChange={(e) => setStock(e.target.value)} required />
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label>Gender</Label>
+        <Select value={gender} onValueChange={(v) => setGender(v as 'men' | 'women' | 'unisex')}>
+          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="men">Men</SelectItem>
+            <SelectItem value="women">Women</SelectItem>
+            <SelectItem value="unisex">Unisex</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <div className="space-y-2">

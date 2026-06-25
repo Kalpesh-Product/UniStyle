@@ -103,6 +103,12 @@ function buildProduct(record, warnings) {
 
   const university = record['university']?.trim() || '';
 
+  const genderRaw = record['gender']?.trim().toLowerCase();
+  const gender = ['men', 'women', 'unisex'].includes(genderRaw) ? genderRaw : 'unisex';
+  if (genderRaw && gender !== genderRaw) {
+    warnings.push(`"${name}": unrecognized gender "${record['gender']}", defaulted to "unisex".`);
+  }
+
   const images = [0, 1, 2, 3]
     .map((i) => normalizeImageUrl(record[`images[${i}]${i === 0 ? ' F' : i === 1 ? ' B' : i === 2 ? ' R' : ' L'}`]))
     .filter(Boolean);
@@ -131,6 +137,7 @@ function buildProduct(record, warnings) {
     price,
     category,
     university,
+    gender,
     images,
     sizes,
     colors,
