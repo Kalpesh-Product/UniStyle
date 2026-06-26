@@ -211,9 +211,9 @@ const universities = [
 
 function UniversitiesSection() {
   return (
-    <section className="bg-[#1A1A1A] py-20 md:py-28">
+    <section className="bg-[#F0EDE8] py-20 md:py-28">
       <div className="max-w-[1440px] mx-auto px-6 lg:px-12">
-        <h2 className="text-2xl md:text-3xl font-bold text-center text-white tracking-tight mb-12">
+        <h2 className="text-2xl md:text-3xl font-bold text-center text-black tracking-tight mb-12">
           SEARCH BY OUR TOP UNIVERSITIES!
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-6">

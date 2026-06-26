@@ -103,7 +103,7 @@ export function AccountPage() {
             <form onSubmit={handleRegister} className="text-center">
               <h1 className="text-3xl font-bold tracking-tight mb-2">Create Account</h1>
               <p className="text-sm text-[#666] mb-8">Join our fashion community</p>
-              <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                 <input
                   type="text"
                   placeholder="First Name"
@@ -173,23 +173,25 @@ export function AccountPage() {
         <div className="flex flex-col lg:flex-row gap-12">
           {/* Sidebar */}
           <aside className="w-full lg:w-[260px] shrink-0">
-            <div className="flex flex-col items-center text-center mb-6">
-              <div className="w-16 h-16 rounded-full bg-[#F1E7FB] text-[#1A1A1A] flex items-center justify-center font-bold text-xl mb-3">
+            <div className="flex lg:flex-col items-center gap-3 lg:gap-0 lg:text-center mb-4 lg:mb-6">
+              <div className="w-12 h-12 lg:w-16 lg:h-16 rounded-full bg-[#F1E7FB] text-[#1A1A1A] flex items-center justify-center font-bold text-lg lg:text-xl shrink-0 lg:mb-3">
                 {user?.firstName?.charAt(0)}{user?.lastName?.charAt(0)}
               </div>
-              <p className="font-semibold">{user?.firstName} {user?.lastName}</p>
-              <p className="text-xs text-[#999]">{user?.email}</p>
+              <div>
+                <p className="font-semibold text-sm lg:text-base">{user?.firstName} {user?.lastName}</p>
+                <p className="text-xs text-[#999]">{user?.email}</p>
+              </div>
             </div>
-            <nav className="space-y-1">
+            <nav className="flex lg:flex-col overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden gap-0.5 -mx-6 px-3 lg:mx-0 lg:px-0 pb-3 border-b border-[#E5E5E5] lg:border-b-0 lg:pb-0 mb-6 lg:mb-0">
               {navItems.map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`w-full flex items-center justify-between gap-3 px-4 py-3 text-sm font-medium transition-all ${
+                  className={`shrink-0 lg:w-full flex items-center lg:justify-between gap-2 lg:gap-3 px-3 lg:px-4 py-2.5 lg:py-3 text-sm font-medium whitespace-nowrap transition-all ${
                     activeTab === tab.id ? 'text-[#1A1A1A] bg-[#F5F5F5]' : 'text-[#666] hover:text-[#1A1A1A] hover:bg-[#FAFAFA]'
                   }`}
                 >
-                  <span className="flex items-center gap-3">
+                  <span className="flex items-center gap-2 lg:gap-3">
                     <tab.icon size={18} />
                     {tab.label}
                   </span>
@@ -203,7 +205,7 @@ export function AccountPage() {
                   logout();
                   showToast('Signed out');
                 }}
-                className="w-full flex items-center gap-3 px-4 py-3 text-sm font-medium text-[#666] hover:text-[#DC2626] transition-colors"
+                className="shrink-0 lg:w-full flex items-center gap-2 lg:gap-3 px-3 lg:px-4 py-2.5 lg:py-3 text-sm font-medium text-[#666] hover:text-[#DC2626] whitespace-nowrap transition-colors"
               >
                 <LogOut size={18} />
                 Logout

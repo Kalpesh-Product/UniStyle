@@ -1,15 +1,54 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Search, User, Heart, ShoppingBag, ChevronDown, X, Menu } from 'lucide-react';
+import { Search, User, Heart, ShoppingBag, X, Menu, ChevronDown } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 
-const navLinks = [
-  { label: 'Home', href: '/', hasDropdown: true },
-  { label: 'Shop', href: '/shop', hasDropdown: true },
-  { label: 'Product', href: '/shop', hasDropdown: true },
-  { label: 'Blog', href: '/blog', hasDropdown: true },
-  { label: 'Featured', href: '/shop', hasDropdown: true },
+const menItems = [
+  { label: 'View All Men', href: '/shop?gender=men' },
+  { label: 'Hoodies', href: '/shop?gender=men&category=Hoodies' },
+  { label: 'T-Shirts', href: '/shop?gender=men&category=T-Shirt' },
+  { label: 'Sweatshirts', href: '/shop?gender=men&category=SweatShirt' },
+  { label: 'Bottoms', href: '/shop?gender=men&category=Bottom' },
+  { label: 'Caps', href: '/shop?gender=men&category=Caps' },
+];
+
+const womenItems = [
+  { label: 'View All Women', href: '/shop?gender=women' },
+  { label: 'Hoodies', href: '/shop?gender=women&category=Hoodies' },
+  { label: 'T-Shirts', href: '/shop?gender=women&category=T-Shirt' },
+  { label: 'Sweatshirts', href: '/shop?gender=women&category=SweatShirt' },
+  { label: 'Bottoms', href: '/shop?gender=women&category=Bottom' },
+  { label: 'Dresses', href: '/shop?gender=women&category=Dresses' },
+];
+
+const universityItems = [
+  { label: 'View All Universities', href: '/shop' },
+  { label: 'De Montfort University', href: '/shop?university=De+Montfort+University' },
+  { label: 'Heriot-Watt University', href: '/shop?university=Heriot-Watt+University' },
+  { label: 'Middlesex University', href: '/shop?university=Middlesex+University' },
+  { label: 'New York University', href: '/shop?university=New+York+University' },
+  { label: 'University of Birmingham', href: '/shop?university=University+of+Birmingham' },
+  { label: 'University of Wollongong', href: '/shop?university=University+of+Wollongong' },
+];
+
+type DropdownItem = { label: string; href: string };
+
+type NavItem = {
+  label: string;
+  href: string;
+  dropdown?: DropdownItem[];
+};
+
+const navLinks: NavItem[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Shop', href: '/shop' },
+  { label: 'Men', href: '/shop?gender=men', dropdown: menItems },
+  { label: 'Women', href: '/shop?gender=women', dropdown: womenItems },
+  { label: 'Universities', href: '/shop', dropdown: universityItems },
+  // { label: 'Product', href: '/shop' },
+  // { label: 'Blog', href: '/blog' },
+  // { label: 'Featured', href: '/shop' },
 ];
 
 export function Header() {
@@ -57,8 +96,8 @@ export function Header() {
               <div
                 key={link.label}
                 className="relative"
-                onMouseEnter={() => handleMouseEnter(index)}
-                onMouseLeave={handleMouseLeave}
+                onMouseEnter={() => link.dropdown ? handleMouseEnter(index) : undefined}
+                onMouseLeave={link.dropdown ? handleMouseLeave : undefined}
               >
                 <Link
                   to={link.href}
@@ -69,15 +108,20 @@ export function Header() {
                   }`}
                 >
                   {link.label}
-                  {link.hasDropdown && <ChevronDown size={14} />}
+                  {link.dropdown && <ChevronDown size={14} />}
                 </Link>
-                {link.hasDropdown && activeDropdown === index && (
-                  <div className="absolute top-full left-0 mt-1 bg-white shadow-[0_8px_32px_rgba(0,0,0,0.08)] py-2 min-w-[160px]">
-                    <Link to="/shop" className="block px-4 py-2 text-sm text-[#666] hover:text-[#1A1A1A] hover:bg-[#F5F5F5]">View All</Link>
-                    <Link to="/shop?category=Women" className="block px-4 py-2 text-sm text-[#666] hover:text-[#1A1A1A] hover:bg-[#F5F5F5]">Women</Link>
-                    <Link to="/shop?category=Men" className="block px-4 py-2 text-sm text-[#666] hover:text-[#1A1A1A] hover:bg-[#F5F5F5]">Men</Link>
-                    <Link to="/shop?category=Bags" className="block px-4 py-2 text-sm text-[#666] hover:text-[#1A1A1A] hover:bg-[#F5F5F5]">Bags</Link>
-                    <Link to="/shop?category=Shoes" className="block px-4 py-2 text-sm text-[#666] hover:text-[#1A1A1A] hover:bg-[#F5F5F5]">Shoes</Link>
+
+                {link.dropdown && activeDropdown === index && (
+                  <div className="absolute top-full left-0 mt-1 bg-white shadow-[0_8px_32px_rgba(0,0,0,0.08)] py-2 min-w-[200px] z-50">
+                    {link.dropdown.map((item) => (
+                      <Link
+                        key={item.label}
+                        to={item.href}
+                        className="block px-4 py-2 text-sm text-[#666] hover:text-[#1A1A1A] hover:bg-[#F5F5F5] transition-colors"
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
                   </div>
                 )}
               </div>
@@ -160,19 +204,38 @@ export function Header() {
 
       {/* Mobile Menu */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-[54] bg-white pt-[72px] lg:hidden">
-          <div className="px-6 py-8 space-y-4">
+        <div className="fixed inset-0 z-[54] bg-white pt-[72px] lg:hidden overflow-y-auto">
+          <div className="px-6 py-8 space-y-1">
             {navLinks.map(link => (
-              <Link
-                key={link.label}
-                to={link.href}
-                className="block text-lg font-medium py-3 border-b border-[#E5E5E5]"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                {link.label}
-              </Link>
+              <div key={link.label}>
+                <Link
+                  to={link.href}
+                  className="block text-lg font-medium py-3 border-b border-[#E5E5E5]"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  {link.label}
+                </Link>
+                {link.dropdown && (
+                  <div className="pl-4 pb-2">
+                    {link.dropdown.slice(1).map(item => (
+                      <Link
+                        key={item.label}
+                        to={item.href}
+                        className="block text-sm text-[#666] py-2 hover:text-[#1A1A1A] transition-colors"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
-            <Link to="/account" className="block text-lg font-medium py-3 border-b border-[#E5E5E5]" onClick={() => setMobileMenuOpen(false)}>
+            <Link
+              to="/account"
+              className="block text-lg font-medium py-3 border-b border-[#E5E5E5]"
+              onClick={() => setMobileMenuOpen(false)}
+            >
               Account
             </Link>
           </div>

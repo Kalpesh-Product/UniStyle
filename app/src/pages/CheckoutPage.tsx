@@ -132,13 +132,13 @@ export function CheckoutPage() {
                 />
 
                 <h2 className="text-lg font-bold mb-6">Shipping Address</h2>
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                   <input placeholder="First Name" value={shippingData.firstName} onChange={e => setShippingData({ ...shippingData, firstName: e.target.value })} className="w-full border border-[#E5E5E5] px-4 py-3 text-sm outline-none focus:border-[#1A1A1A]" />
                   <input placeholder="Last Name" value={shippingData.lastName} onChange={e => setShippingData({ ...shippingData, lastName: e.target.value })} className="w-full border border-[#E5E5E5] px-4 py-3 text-sm outline-none focus:border-[#1A1A1A]" />
                 </div>
                 <input placeholder="Address" value={shippingData.address1} onChange={e => setShippingData({ ...shippingData, address1: e.target.value })} className="w-full border border-[#E5E5E5] px-4 py-3 text-sm mb-4 outline-none focus:border-[#1A1A1A]" />
                 <input placeholder="Apartment, suite, etc. (optional)" value={shippingData.address2} onChange={e => setShippingData({ ...shippingData, address2: e.target.value })} className="w-full border border-[#E5E5E5] px-4 py-3 text-sm mb-4 outline-none focus:border-[#1A1A1A]" />
-                <div className="grid grid-cols-3 gap-4 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                   <input placeholder="City" value={shippingData.city} onChange={e => setShippingData({ ...shippingData, city: e.target.value })} className="w-full border border-[#E5E5E5] px-4 py-3 text-sm outline-none focus:border-[#1A1A1A]" />
                   <input placeholder="Country" value={shippingData.country} onChange={e => setShippingData({ ...shippingData, country: e.target.value })} className="w-full border border-[#E5E5E5] px-4 py-3 text-sm outline-none focus:border-[#1A1A1A]" />
                   <input placeholder="Postal Code" value={shippingData.postalCode} onChange={e => setShippingData({ ...shippingData, postalCode: e.target.value })} className="w-full border border-[#E5E5E5] px-4 py-3 text-sm outline-none focus:border-[#1A1A1A]" />
@@ -213,7 +213,7 @@ export function CheckoutPage() {
                       onChange={e => setCardData({ ...cardData, number: e.target.value })}
                       className="w-full border border-[#E5E5E5] px-4 py-3 text-sm mb-4 outline-none focus:border-[#1A1A1A]"
                     />
-                    <div className="grid grid-cols-3 gap-4 mb-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
                       <input placeholder="MM/YY" value={cardData.expiry} onChange={e => setCardData({ ...cardData, expiry: e.target.value })} className="w-full border border-[#E5E5E5] px-4 py-3 text-sm outline-none focus:border-[#1A1A1A]" />
                       <input placeholder="CVV" value={cardData.cvv} onChange={e => setCardData({ ...cardData, cvv: e.target.value })} className="w-full border border-[#E5E5E5] px-4 py-3 text-sm outline-none focus:border-[#1A1A1A]" />
                       <input placeholder="ZIP" className="w-full border border-[#E5E5E5] px-4 py-3 text-sm outline-none focus:border-[#1A1A1A]" />

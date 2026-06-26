@@ -129,7 +129,7 @@ export function AdminPage() {
   return (
     <div className="min-h-screen bg-[#FAFAFA]">
       <header className="border-b border-[#E5E5E5] bg-white">
-        <div className="max-w-[1280px] mx-auto px-6 py-4 flex items-center justify-between">
+        <div className="max-w-[1280px] mx-auto px-4 md:px-6 py-4 flex items-center justify-between gap-4">
           <h1 className="text-xl font-bold tracking-tight text-[#1A1A1A]">UniStyle Admin</h1>
           <Button variant="outline" size="sm" onClick={handleLogout}>
             <LogOut className="size-4 mr-1.5" /> Log out
@@ -137,9 +137,9 @@ export function AdminPage() {
         </div>
       </header>
 
-      <main className="max-w-[1280px] mx-auto px-6 py-8">
-        <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
-          <div className="relative w-full max-w-[320px]">
+      <main className="max-w-[1280px] mx-auto px-4 md:px-6 py-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <div className="relative w-full sm:max-w-[320px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-[#999]" />
             <Input
               placeholder="Search products..."
@@ -148,7 +148,7 @@ export function AdminPage() {
               className="pl-9"
             />
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <Button
               variant={featuredOnly ? 'default' : 'outline'}
               className={featuredOnly ? 'bg-[#1A1A1A] hover:bg-[#333]' : undefined}
@@ -177,6 +177,7 @@ export function AdminPage() {
         )}
 
         <div className="bg-white border border-[#E5E5E5] rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
@@ -249,11 +250,12 @@ export function AdminPage() {
               )}
             </TableBody>
           </Table>
+          </div>
         </div>
       </main>
 
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="w-full max-w-[95vw] sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>{editing ? 'Edit product' : 'Add product'}</DialogTitle>
             <DialogDescription>
@@ -269,7 +271,7 @@ export function AdminPage() {
       </Dialog>
 
       <Dialog open={csvOpen} onOpenChange={setCsvOpen}>
-        <DialogContent className="sm:max-w-[560px]">
+        <DialogContent className="w-full max-w-[95vw] sm:max-w-[560px]">
           <DialogHeader>
             <DialogTitle>Upload product CSV</DialogTitle>
             <DialogDescription>Preview the file before committing it to the database.</DialogDescription>

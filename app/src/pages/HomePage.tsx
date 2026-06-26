@@ -298,7 +298,7 @@ function BestSellers() {
               All Products
             </Link>
           </div>
-          <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-3 gap-6">
+          <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {bestSellers.map(p => (
               <div key={p.id} className="bs-card">
                 <ProductCard product={p} small />

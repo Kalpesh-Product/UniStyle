@@ -387,7 +387,7 @@ export function WishlistPage() {
                 </div>
               )}
             </div>
-          </div>
+c          </div>
         )}
       </div>
     </div>

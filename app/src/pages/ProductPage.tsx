@@ -393,9 +393,9 @@ export function ProductPage() {
       <CollectionRow title="Complete the Collection" products={completeCollection} />
 
       {/* You May Also Like */}
-      <div className="bg-[#F5F5F5]">
+      {/* <div className="bg-[#F5F5F5]"> */}
         <CollectionRow title="You May Also Like" products={youMayAlsoLike} />
-      </div>
+      {/* </div> */}
 
       {/* Zoom Modal */}
       {zoomOpen && (

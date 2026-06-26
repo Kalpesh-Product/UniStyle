@@ -94,7 +94,7 @@ export function AdminProductForm({ initial, onSubmit, onCancel }: Props) {
         <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} required rows={3} />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="price">Price (AED)</Label>
           <Input id="price" type="number" step="0.01" min="0" value={price} onChange={(e) => setPrice(e.target.value)} required />
@@ -105,7 +105,7 @@ export function AdminProductForm({ initial, onSubmit, onCancel }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Category</Label>
           <Select value={category} onValueChange={setCategory}>
@@ -143,7 +143,7 @@ export function AdminProductForm({ initial, onSubmit, onCancel }: Props) {
         <Textarea id="images" value={images} onChange={(e) => setImages(e.target.value)} rows={2} placeholder="https://...jpg, https://...jpg" />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="sizes">Sizes (comma separated)</Label>
           <Input id="sizes" value={sizes} onChange={(e) => setSizes(e.target.value)} placeholder="S, M, L, XL" />

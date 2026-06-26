@@ -89,13 +89,13 @@ export function AddressesTab({ addresses, addAddress, updateAddress, removeAddre
               {LABEL_OPTIONS.map(l => <option key={l} value={l}>{l}</option>)}
             </select>
           </div>
-          <div className="grid grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
             <input required placeholder="First Name" value={form.firstName} onChange={e => setForm({ ...form, firstName: e.target.value })} className="w-full bg-white border border-[#E5E5E5] px-3 py-2.5 text-sm outline-none focus:border-[#1A1A1A]" />
             <input required placeholder="Last Name" value={form.lastName} onChange={e => setForm({ ...form, lastName: e.target.value })} className="w-full bg-white border border-[#E5E5E5] px-3 py-2.5 text-sm outline-none focus:border-[#1A1A1A]" />
           </div>
           <input required placeholder="Address" value={form.address1} onChange={e => setForm({ ...form, address1: e.target.value })} className="w-full bg-white border border-[#E5E5E5] px-3 py-2.5 text-sm outline-none focus:border-[#1A1A1A] mb-4" />
           <input placeholder="Apartment, suite, etc. (optional)" value={form.address2} onChange={e => setForm({ ...form, address2: e.target.value })} className="w-full bg-white border border-[#E5E5E5] px-3 py-2.5 text-sm outline-none focus:border-[#1A1A1A] mb-4" />
-          <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
             <input required placeholder="City" value={form.city} onChange={e => setForm({ ...form, city: e.target.value })} className="w-full bg-white border border-[#E5E5E5] px-3 py-2.5 text-sm outline-none focus:border-[#1A1A1A]" />
             <input required placeholder="Country" value={form.country} onChange={e => setForm({ ...form, country: e.target.value })} className="w-full bg-white border border-[#E5E5E5] px-3 py-2.5 text-sm outline-none focus:border-[#1A1A1A]" />
             <input required placeholder="Postal Code" value={form.postalCode} onChange={e => setForm({ ...form, postalCode: e.target.value })} className="w-full bg-white border border-[#E5E5E5] px-3 py-2.5 text-sm outline-none focus:border-[#1A1A1A]" />
