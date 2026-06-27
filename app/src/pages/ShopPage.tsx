@@ -283,7 +283,7 @@ export function ShopPage() {
                 <div className="mb-6">
                   <h4 className="text-sm font-semibold uppercase tracking-wider mb-3">Gender</h4>
                   <div className="space-y-2">
-                    {['men', 'women'].map(gender => {
+                    {(['men', 'women'] as const).map(gender => {
                       const count = products.filter(p => p.gender?.includes(gender)).length;
                       return (
                         <label key={gender} className="flex items-center gap-2 text-sm text-[#666] cursor-pointer hover:text-[#1A1A1A]">
