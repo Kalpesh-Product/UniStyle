@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Heart, HelpCircle, Truck, Share2, Check, Star, ChevronLeft, ChevronRight, ShoppingBag, Lock, RefreshCw, Search } from 'lucide-react';
+import { Heart, HelpCircle, Truck, Share2, Check, Star, ChevronLeft, ChevronRight, ShoppingBag, Lock, RefreshCw } from 'lucide-react';
 import { useProduct, useProducts } from '@/hooks/useProducts';
 import type { Product } from '@/data/products';
 import { api, type BackendReview } from '@/lib/api';
